@@ -1,7 +1,9 @@
 package uga.csx370.mydbimpl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import uga.csx370.mydb.Cell;
 import uga.csx370.mydb.Predicate;
@@ -78,13 +80,17 @@ public class RAImpl implements RA {
             throw new IllegalArgumentException("origAttr and renamedAttr must have "
                     + "matching argument counts.");
         }
-        List<String> newAttrs = new ArrayList<>(rel.getAttrs());
+        Map<String, String> renameMap = new HashMap<>();
         for (int i = 0; i < origAttr.size(); ++i) {
             String orig = origAttr.get(i);
             if (!rel.hasAttr(orig)) {
                 throw new IllegalArgumentException("Attribute does not exist: " + orig);
             }
-            newAttrs.set(rel.getAttrIndex(orig), renamedAttr.get(i));
+            renameMap.put(orig, renamedAttr.get(i));
+        }
+        List<String> newAttrs = new ArrayList<>();
+        for (String attr : rel.getAttrs()) {
+            newAttrs.add(renameMap.getOrDefault(attr, attr));
         }
         Relation result = new RelationBuilder()
                 .attributeNames(newAttrs)

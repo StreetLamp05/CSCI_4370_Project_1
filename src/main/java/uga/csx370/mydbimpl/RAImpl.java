@@ -1,23 +1,57 @@
 package uga.csx370.mydbimpl;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import uga.csx370.mydb.Cell;
 import uga.csx370.mydb.Predicate;
 import uga.csx370.mydb.RA;
 import uga.csx370.mydb.Relation;
+import uga.csx370.mydb.RelationBuilder;
+import uga.csx370.mydb.Type;
 
 public class RAImpl implements RA {
 
     @Override
     public Relation select(Relation rel, Predicate p) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'select'");
+        Relation result = new RelationBuilder()
+                .attributeNames(rel.getAttrs())
+                .attributeTypes(rel.getTypes())
+                .build();
+        for (int i = 0; i < rel.getSize(); ++i) {
+            List<Cell> row = rel.getRow(i);
+            if (p.check(row)) {
+                result.insert(row);
+            }
+        }
+        return result;
     }
 
     @Override
     public Relation project(Relation rel, List<String> attrs) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'project'");
+        List<Integer> indices = new ArrayList<>();
+        List<Type> types = new ArrayList<>();
+        for (String attr : attrs) {
+            if (!rel.hasAttr(attr)) {
+                throw new IllegalArgumentException("Attribute does not exist: " + attr);
+            }
+            int idx = rel.getAttrIndex(attr);
+            indices.add(idx);
+            types.add(rel.getTypes().get(idx));
+        }
+        Relation result = new RelationBuilder()
+                .attributeNames(new ArrayList<>(attrs))
+                .attributeTypes(types)
+                .build();
+        for (int i = 0; i < rel.getSize(); ++i) {
+            List<Cell> row = rel.getRow(i);
+            List<Cell> newRow = new ArrayList<>();
+            for (int idx : indices) {
+                newRow.add(row.get(idx));
+            }
+            result.insert(newRow);
+        }
+        return result;
     }
 
     @Override
@@ -40,8 +74,26 @@ public class RAImpl implements RA {
 
     @Override
     public Relation rename(Relation rel, List<String> origAttr, List<String> renamedAttr) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'rename'");
+        if (origAttr.size() != renamedAttr.size()) {
+            throw new IllegalArgumentException("origAttr and renamedAttr must have "
+                    + "matching argument counts.");
+        }
+        List<String> newAttrs = new ArrayList<>(rel.getAttrs());
+        for (int i = 0; i < origAttr.size(); ++i) {
+            String orig = origAttr.get(i);
+            if (!rel.hasAttr(orig)) {
+                throw new IllegalArgumentException("Attribute does not exist: " + orig);
+            }
+            newAttrs.set(rel.getAttrIndex(orig), renamedAttr.get(i));
+        }
+        Relation result = new RelationBuilder()
+                .attributeNames(newAttrs)
+                .attributeTypes(rel.getTypes())
+                .build();
+        for (int i = 0; i < rel.getSize(); ++i) {
+            result.insert(rel.getRow(i));
+        }
+        return result;
     }
 
     @Override

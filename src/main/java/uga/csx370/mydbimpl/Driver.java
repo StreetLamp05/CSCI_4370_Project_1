@@ -19,7 +19,6 @@ public class Driver {
     public static void main(String[] args) {
         String dataDir = findDataDir();
 
-        // Tables loaded from the uni_in_class database (exported to CSV under ./data).
         Relation department = new RelationBuilder()
                 .attributeNames(List.of("dept_name", "building", "budget"))
                 .attributeTypes(List.of(Type.STRING, Type.STRING, Type.DOUBLE))

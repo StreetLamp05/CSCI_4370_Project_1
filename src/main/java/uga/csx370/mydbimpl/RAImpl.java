@@ -16,10 +16,7 @@ public class RAImpl implements RA {
 
     @Override
     public Relation select(Relation rel, Predicate p) {
-        Relation result = new RelationBuilder()
-                .attributeNames(rel.getAttrs())
-                .attributeTypes(rel.getTypes())
-                .build();
+        Relation result = emptyRelationWithSchema(rel.getAttrs(), rel.getTypes());
         for (int i = 0; i < rel.getSize(); ++i) {
             List<Cell> row = rel.getRow(i);
             if (p.check(row)) {
@@ -31,29 +28,53 @@ public class RAImpl implements RA {
 
     @Override
     public Relation project(Relation rel, List<String> attrs) {
-        List<Integer> indices = new ArrayList<>();
+        List<Integer> indices = resolveAttrIndices(rel, attrs);
         List<Type> types = new ArrayList<>();
+        for (int idx : indices) {
+            types.add(rel.getTypes().get(idx));
+        }
+        Relation result = emptyRelationWithSchema(attrs, types);
+        for (int i = 0; i < rel.getSize(); ++i) {
+            result.insert(extractCells(rel.getRow(i), indices));
+        }
+        return result;
+    }
+
+    /**
+     * Builds an empty relation using the given attribute names and types.
+     */
+    private Relation emptyRelationWithSchema(List<String> attrNames, List<Type> attrTypes) {
+        return new RelationBuilder()
+                .attributeNames(new ArrayList<>(attrNames))
+                .attributeTypes(new ArrayList<>(attrTypes))
+                .build();
+    }
+
+    /**
+     * Resolves each attribute name to its column index in rel, in the given order.
+     *
+     * @throws IllegalArgumentException if any attribute in attrs is not present in rel.
+     */
+    private List<Integer> resolveAttrIndices(Relation rel, List<String> attrs) {
+        List<Integer> indices = new ArrayList<>();
         for (String attr : attrs) {
             if (!rel.hasAttr(attr)) {
                 throw new IllegalArgumentException("Attribute does not exist: " + attr);
             }
-            int idx = rel.getAttrIndex(attr);
-            indices.add(idx);
-            types.add(rel.getTypes().get(idx));
+            indices.add(rel.getAttrIndex(attr));
         }
-        Relation result = new RelationBuilder()
-                .attributeNames(new ArrayList<>(attrs))
-                .attributeTypes(types)
-                .build();
-        for (int i = 0; i < rel.getSize(); ++i) {
-            List<Cell> row = rel.getRow(i);
-            List<Cell> newRow = new ArrayList<>();
-            for (int idx : indices) {
-                newRow.add(row.get(idx));
-            }
-            result.insert(newRow);
+        return indices;
+    }
+
+    /**
+     * Builds a new row containing only the cells at the given column indices, in order.
+     */
+    private List<Cell> extractCells(List<Cell> row, List<Integer> indices) {
+        List<Cell> newRow = new ArrayList<>();
+        for (int idx : indices) {
+            newRow.add(row.get(idx));
         }
-        return result;
+        return newRow;
     }
 
     @Override

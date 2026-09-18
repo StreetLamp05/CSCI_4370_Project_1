@@ -2,10 +2,8 @@ package uga.csx370.mydbimpl;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import uga.csx370.mydb.Cell;
 import uga.csx370.mydb.Predicate;
@@ -81,87 +79,20 @@ public class RAImpl implements RA {
 
     @Override
     public Relation union(Relation rel1, Relation rel2) {
-        if (!rel1.getAttrs().equals(rel2.getAttrs()) || !rel1.getTypes().equals(rel2.getTypes())) {
-            throw new IllegalArgumentException("Relations aren't compatible.");
-        }
-
-        Relation unionResult = emptyRelationWithSchema(rel1.getAttrs(),rel1.getTypes());
-
-        Set<List<Cell>> seen = new HashSet<>();
-
-        for (int i = 0; i < rel1.getSize(); i++) {
-            List<Cell> row = rel1.getRow(i);
-
-            if (seen.add(row)) {
-                unionResult.insert(row);
-            }
-        }
-
-        for (int i = 0; i < rel2.getSize(); i++) {
-            List<Cell> row = rel2.getRow(i);
-
-            if (seen.add(row)) {
-                unionResult.insert(row);
-            }
-        }
-
-        return unionResult;
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'union'");
     }
 
     @Override
     public Relation intersect(Relation rel1, Relation rel2) {
-        if (!rel1.getAttrs().equals(rel2.getAttrs()) || !rel1.getTypes().equals(rel2.getTypes())) {
-            throw new IllegalArgumentException("Relations aren't compatible.");
-        }
-
-        Relation intersectResult = emptyRelationWithSchema(rel1.getAttrs(), rel1.getTypes());
-
-        Set<List<Cell>> rel2Rows = new HashSet<>();
-
-        for (int i = 0; i < rel2.getSize(); i++) {
-            List<Cell> row = rel2.getRow(i);
-            rel2Rows.add(row);
-        }
-
-        Set<List<Cell>> seen = new HashSet<>();
-
-        for (int i = 0; i < rel1.getSize(); i++) {
-            List<Cell> row = rel1.getRow(i);
-            
-            if (rel2Rows.contains(row) && seen.add(row)) {
-                intersectResult.insert(row);
-            }
-        }
-
-        return intersectResult;
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'intersect'");
     }
 
     @Override
     public Relation diff(Relation rel1, Relation rel2) {
-        if (!rel1.getAttrs().equals(rel2.getAttrs()) || !rel1.getTypes().equals(rel2.getTypes())) {
-            throw new IllegalArgumentException("Relations aren't compatible.");
-        }
-
-        Relation diffResult = emptyRelationWithSchema(rel1.getAttrs(), rel1.getTypes());
-
-        Set<List<Cell>> rel2Rows = new HashSet<>();
-
-        for (int i = 0; i < rel2.getSize(); i++) {
-            List<Cell> row = rel2.getRow(i);
-            rel2Rows.add(row);
-        }
-
-        Set<List<Cell>> seen = new HashSet<>();
-
-        for (int i = 0; i < rel1.getSize(); i++) {
-            List<Cell> row = rel1.getRow(i);
-            
-            if (!rel2Rows.contains(row) && seen.add(row)) {
-                diffResult.insert(row);
-            }
-        }
-
-        return diffResult;
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'diff'");
     }
 
     @Override
@@ -194,30 +125,8 @@ public class RAImpl implements RA {
 
     @Override
     public Relation cartesianProduct(Relation rel1, Relation rel2) {
-        if (!commonAttrs(rel1, rel2).isEmpty()) {
-            throw new IllegalArgumentException("Relations have common attributes.");
-        }
-
-        List<String> resultAttrs = new ArrayList<>(rel1.getAttrs());
-        resultAttrs.addAll(rel2.getAttrs());
-
-        List<Type> resultTypes = new ArrayList<>(rel1.getTypes());
-        resultTypes.addAll(rel2.getTypes());
-
-        Relation cartesianResult = emptyRelationWithSchema(resultAttrs, resultTypes);
-
-        for (int i = 0; i < rel1.getSize(); i++) {
-            List<Cell> row1 = rel1.getRow(i);
-
-            for (int j = 0; j < rel2.getSize(); j++) {
-                List<Cell> row2 = rel2.getRow(j);
-
-                List<Cell> combinedRow = concatCells(row1, row2);
-                cartesianResult.insert(combinedRow);
-            }
-        }
-
-        return cartesianResult;
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'cartesianProduct'");
     }
 
     @Override

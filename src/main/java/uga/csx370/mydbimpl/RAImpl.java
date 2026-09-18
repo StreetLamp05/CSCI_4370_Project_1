@@ -131,14 +131,113 @@ public class RAImpl implements RA {
 
     @Override
     public Relation join(Relation rel1, Relation rel2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'join'");
+        List<String> common = commonAttrs(rel1, rel2);
+        List<Integer> keyIndices1 = resolveAttrIndices(rel1, common);
+        List<Integer> keyIndices2 = resolveAttrIndices(rel2, common);
+        List<String> keepAttrs = attrsOnlyIn(rel2, rel1);
+        List<Integer> keepIndices = resolveAttrIndices(rel2, keepAttrs);
+        List<String> attrs = new ArrayList<>(rel1.getAttrs());
+        attrs.addAll(keepAttrs);
+        List<Type> types = new ArrayList<>(rel1.getTypes());
+        types.addAll(attrTypesAt(rel2, keepIndices));
+        Relation result = emptyRelationWithSchema(attrs, types);
+        Map<List<Cell>, List<List<Cell>>> groups = groupRowsByKey(rel2, keyIndices2);
+        for (int i = 0; i < rel1.getSize(); ++i) {
+            List<Cell> row = rel1.getRow(i);
+            List<Cell> key = extractCells(row, keyIndices1);
+            for (List<Cell> match : groups.getOrDefault(key, List.of())) {
+                result.insert(concatCells(row, extractCells(match, keepIndices)));
+            }
+        }
+        return result;
     }
 
     @Override
     public Relation join(Relation rel1, Relation rel2, Predicate p) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'join'");
+        List<String> common = commonAttrs(rel1, rel2);
+        if (!common.isEmpty()) {
+            throw new IllegalArgumentException("Relations to join have a common attribute: "
+                    + common.get(0));
+        }
+        List<String> attrs = new ArrayList<>(rel1.getAttrs());
+        attrs.addAll(rel2.getAttrs());
+        List<Type> types = new ArrayList<>(rel1.getTypes());
+        types.addAll(rel2.getTypes());
+        Relation result = emptyRelationWithSchema(attrs, types);
+        for (int i = 0; i < rel1.getSize(); ++i) {
+            List<Cell> row1 = rel1.getRow(i);
+            for (int j = 0; j < rel2.getSize(); ++j) {
+                List<Cell> combined = concatCells(row1, rel2.getRow(j));
+                if (p.check(combined)) {
+                    result.insert(combined);
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Returns the attributes that appear in both rel1 and rel2, in the order they
+     * appear in rel1.
+     */
+    private List<String> commonAttrs(Relation rel1, Relation rel2) {
+        List<String> common = new ArrayList<>();
+        for (String attr : rel1.getAttrs()) {
+            if (rel2.hasAttr(attr)) {
+                common.add(attr);
+            }
+        }
+        return common;
+    }
+
+    /**
+     * Returns the attributes of rel that do not appear in other, in the order they
+     * appear in rel.
+     */
+    private List<String> attrsOnlyIn(Relation rel, Relation other) {
+        List<String> only = new ArrayList<>();
+        for (String attr : rel.getAttrs()) {
+            if (!other.hasAttr(attr)) {
+                only.add(attr);
+            }
+        }
+        return only;
+    }
+
+    /**
+     * Returns the types of the columns of rel at the given indices, in order.
+     */
+    private List<Type> attrTypesAt(Relation rel, List<Integer> indices) {
+        List<Type> types = rel.getTypes();
+        List<Type> newTypes = new ArrayList<>();
+        for (int idx : indices) {
+            newTypes.add(types.get(idx));
+        }
+        return newTypes;
+    }
+
+    /**
+     * Groups the rows of rel into buckets keyed by the cells at the given column
+     * indices.
+     */
+    private Map<List<Cell>, List<List<Cell>>> groupRowsByKey(Relation rel,
+            List<Integer> keyIndices) {
+        Map<List<Cell>, List<List<Cell>>> groups = new HashMap<>();
+        for (int i = 0; i < rel.getSize(); ++i) {
+            List<Cell> row = rel.getRow(i);
+            List<Cell> key = extractCells(row, keyIndices);
+            groups.computeIfAbsent(key, k -> new ArrayList<>()).add(row);
+        }
+        return groups;
+    }
+
+    /**
+     * Builds a new row by appending the cells of row2 after the cells of row1.
+     */
+    private List<Cell> concatCells(List<Cell> row1, List<Cell> row2) {
+        List<Cell> newRow = new ArrayList<>(row1);
+        newRow.addAll(row2);
+        return newRow;
     }
 
 }

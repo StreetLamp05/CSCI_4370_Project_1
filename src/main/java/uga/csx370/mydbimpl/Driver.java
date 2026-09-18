@@ -175,6 +175,24 @@ public class Driver {
                 List.of("course_title"));
 
         nikitaResult.print();
+      
+        System.out.println("Anvita's Query: Find the names and salaries of instructors in departments "
+                + "that offer three-credit courses, along with the course title and department building.");
+        System.out.println();
+
+        Relation threeCreditCourses = ra.select(course,
+                row -> row.get(3).getAsInt() == 3);
+
+        Relation instructorCourses = ra.join(instructor, threeCreditCourses);
+
+        Relation instructorCoursesDept = ra.join(instructorCourses, department);
+
+        Relation anvitaResult = ra.project(instructorCoursesDept,
+                List.of("name", "salary", "title", "building"));
+
+        anvitaResult.print();
+
+
     }
 
     private static String findDataDir() {

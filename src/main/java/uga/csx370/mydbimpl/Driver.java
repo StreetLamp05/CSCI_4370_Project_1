@@ -71,6 +71,41 @@ public class Driver {
                 List.of("instructor_name", "course_title", "dept_building", "dept_budget"));
 
         result.print();
+
+        System.out.println();
+        System.out.println("Davids Query: Find every instructor who has taught a section since 2005 of a "
+                + "course that is owned by a department other than their own, with the course "
+                + "title, the department that owns the course, and that department's building");
+        System.out.println();
+
+        Relation recentTeaches = ra.select(teaches, row -> row.get(4).getAsInt() >= 2005);
+
+        Relation taughtBy = ra.join(instructor, recentTeaches);
+        Relation taughtByTrimmed = ra.project(taughtBy, List.of("name", "dept_name", "course_id"));
+        Relation taughtByRenamed = ra.rename(taughtByTrimmed,
+                List.of("name", "dept_name", "course_id"),
+                List.of("instructor_name", "instructor_dept", "taught_course_id"));
+
+        Relation courseRenamed = ra.rename(course,
+                List.of("course_id", "title", "dept_name", "credits"),
+                List.of("offered_course_id", "course_title", "course_dept", "course_credits"));
+
+        Relation crossDept = ra.join(taughtByRenamed, courseRenamed,
+                row -> row.get(2).getAsString().equals(row.get(3).getAsString())
+                        && !row.get(1).getAsString().equals(row.get(5).getAsString()));
+        Relation crossDeptTrimmed = ra.project(crossDept,
+                List.of("instructor_name", "instructor_dept", "course_title", "course_dept"));
+        Relation crossDeptReady = ra.rename(crossDeptTrimmed,
+                List.of("course_dept"), List.of("dept_name"));
+
+        Relation crossDeptWithBuilding = ra.join(crossDeptReady, department);
+        Relation crossDeptProjected = ra.project(crossDeptWithBuilding,
+                List.of("instructor_name", "instructor_dept", "course_title", "dept_name", "building"));
+        Relation crossDeptResult = ra.rename(crossDeptProjected,
+                List.of("dept_name", "building"),
+                List.of("course_dept", "course_dept_building"));
+
+        crossDeptResult.print();
     }
 
     private static String findDataDir() {

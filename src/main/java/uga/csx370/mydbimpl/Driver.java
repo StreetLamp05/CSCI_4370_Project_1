@@ -128,6 +128,53 @@ public class Driver {
                 List.of("instructor_name", "course_title", "department", "dept_building"));
 
         synahResult.print();
+
+        System.out.println();
+        System.out.println("Nikita's Query: Find every instructor who has taught a section in Fall 2006 "
+                + "of a course offered by the Physics department, with that instructor's own department, "
+                + "course title, section semester and year, and budget of the department that offers the course.");
+        System.out.println();
+
+        Relation physicsCourses = ra.select(course,
+                row -> row.get(2).getAsString().equals("Physics"));
+
+        Relation physicsCoursesTrimmed = ra.project(physicsCourses,
+                List.of("course_id", "title", "dept_name"));
+        Relation physicsCoursesRenamed = ra.rename(physicsCoursesTrimmed,
+                List.of("dept_name"),
+                List.of("course_key"));
+
+        Relation fall2006 = ra.select(teaches,
+                row -> row.get(3).getAsString().equals("Fall")
+                        && row.get(4).getAsInt() == 2006);
+
+        Relation instructorTaught = ra.join(instructor, fall2006);
+        Relation physicsTaught = ra.join(instructorTaught, physicsCoursesRenamed);
+
+        Relation physicsTaughtProjected = ra.project(physicsTaught,
+                List.of("name", "dept_name", "title", "course_key", "semester", "year"));
+
+        Relation physicsTaughtRenamed = ra.rename(physicsTaughtProjected,
+                List.of("name", "dept_name"),
+                List.of("instructor_name", "instructor_dept"));
+
+        Relation departmentRenamed = ra.rename(department,
+                List.of("dept_name", "building", "budget"),
+                List.of("dept_key", "course_building", "course_budget"));
+
+        Relation cross = ra.join(physicsTaughtRenamed, departmentRenamed);
+        Relation withBudget = ra.select(cross,
+                row -> row.get(3).getAsString().equals(row.get(6).getAsString()));
+
+        Relation resultProjected = ra.project(withBudget,
+                List.of("instructor_name", "instructor_dept", "title",
+                        "semester", "year", "course_budget"));
+
+        Relation nikitaResult = ra.rename(resultProjected,
+                List.of("title"),
+                List.of("course_title"));
+
+        nikitaResult.print();
     }
 
     private static String findDataDir() {

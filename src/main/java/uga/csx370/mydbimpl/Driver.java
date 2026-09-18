@@ -106,6 +106,28 @@ public class Driver {
                 List.of("course_dept", "course_dept_building"));
 
         crossDeptResult.print();
+
+        System.out.println();
+        System.out.println("Synah's Query: Find instructors who taught a four-credit course offered by "
+                + "their own department, including the course title, semester, year, and "
+                + "department building.");
+        System.out.println();
+
+        Relation fourCreditCourses = ra.select(course,
+                row -> row.get(3).getAsInt() == 4);
+
+        Relation instructorsAndSections = ra.join(instructor, teaches);
+        Relation matchingCourses = ra.join(instructorsAndSections, fourCreditCourses);
+        Relation withDepartmentBuilding = ra.join(matchingCourses, department);
+
+        Relation synahProjected = ra.project(withDepartmentBuilding,
+                List.of("name", "title", "semester", "year", "dept_name", "building"));
+
+        Relation synahResult = ra.rename(synahProjected,
+                List.of("name", "title", "dept_name", "building"),
+                List.of("instructor_name", "course_title", "department", "dept_building"));
+
+        synahResult.print();
     }
 
     private static String findDataDir() {
